@@ -1,9 +1,6 @@
 package ru.netology;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -13,16 +10,17 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static ru.netology.Errors.*;
+
 public class Server {
     private final int nThreads = 64;
     private final ExecutorService handlersExecutorService = Executors.newFixedThreadPool(nThreads);
     private final List<String> validPaths = List.of("/index.html", "/spring.svg",
             "/spring.png", "/resources.html", "/styles.css", "/app.js", "/links.html",
-            "/forms.html", "/classic.html", "/events.html", "/events.js", "/favicon.ico");
+            "/forms.html", "/classic.html", "/events.html", "/events.js", "/favicon.ico",
+            "/doneStyle.css",  "/done.html" );
     private final Map<String, Map<String, Handler>> handlerMap = new HashMap<>();
 
-    public Server() {
-    }
 
     public void listen(int port) {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
@@ -41,46 +39,34 @@ public class Server {
     }
 
     public void onConnection(Socket socket) {
-        try {
-            final var in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            final var out = new BufferedOutputStream(socket.getOutputStream());
-            final var requestLine = in.readLine();
-            if (requestLine == null) {
-                send404(out);
+        try (final var in = new BufferedInputStream(socket.getInputStream());
+             final var out = new BufferedOutputStream(socket.getOutputStream())
+        ) {
+            Request request = new Request(in);
+            if (!request.isValid()) {
+                errorResponse(ERROR400, out);
                 return;
             }
-            final var parts = requestLine.split(" ");
-            if (parts.length != 3) {
-                send404(out);
-                return;
-            }
-            Request request = new Request(parts);
             final var handler = getHandler(request);
-
             if (handler == null) {
-                send404(out);
+                errorResponse(ERROR404, out);
                 return;
             }
             handler.handle(request, out);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    private void send404(BufferedOutputStream out) {
-        try {
-            out.write((
-                    "HTTP/1.1 404 Not Found\r\n" +
-                            "Content-Length: 0\r\n" +
-                            "Connection: close\r\n" +
-                            "\r\n").getBytes());
-            out.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
+    private static void errorResponse(Errors error, BufferedOutputStream out) throws IOException {
+        out.write((error +"\r\n" +
+                "Content-Length: 0\r\n" +
+                "Connection: close\r\n" +
+                "\r\n"
+        ).getBytes());
+        out.flush();
+    }
+
 
     private Handler getHandler(Request request) {
         return handlerMap.get(request.getMethod()).get(request.getPath());

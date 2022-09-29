@@ -9,14 +9,14 @@ public class Main {
         server.getValidPaths().
                 forEach(path -> server.addHandler("GET", path, (request, responseStream) -> {
                     try {
-                        new RequestGETHandler(request, responseStream);
+                        new MethodGETHandler(request, responseStream);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 }));
-        server.addHandler("POST", "/POSTRequestPath", (request, responseStream) -> {
+        server.addHandler("POST", "/forms.html", (request, responseStream) -> {
             try {
-                new RequestPOSTHandler(request, responseStream);
+                new MethodPOSTHandler(request, responseStream);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

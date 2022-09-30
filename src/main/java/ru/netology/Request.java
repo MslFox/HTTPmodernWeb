@@ -67,8 +67,7 @@ public class Request {
             }
         }
         isValid = true;
-        System.out.println(getQueryString());
-    }
+      }
 
     public String getMethod() {
         return isValid() ? method : null;
@@ -82,32 +81,52 @@ public class Request {
         return isValid() ? headers : null;
     }
 
-    public String getBody() {
-        return isValid() ? body : null;
-    }
 
     public String getQueryString() {
         final var parts = path.split("\\?");
         return isValid() && parts.length > 1 ? parts[1] : "";
     }
 
-    public List<NameValuePair> getQueryParam(String name) {
-        final var namesList = new ArrayList<NameValuePair>();
-        getQueryParams().forEach(nameValuePair -> {
-            if(nameValuePair.getName().equals(name)) namesList.add(nameValuePair);
-        });
-        return namesList;
-    }
 
     public List<NameValuePair> getQueryParams() {
         return URLEncodedUtils.parse(getQueryString(), StandardCharsets.UTF_8);
     }
-    public List<NameValuePair> getPostParam(String name){
-        return null;
+
+    public List<NameValuePair> getQueryParam(String name) {
+        final var searchList = new ArrayList<NameValuePair>();
+        getQueryParams().forEach(nameValuePair -> {
+            if (nameValuePair.getName().equals(name)) searchList.add(nameValuePair);
+        });
+        return searchList;
     }
 
-    public List<NameValuePair> getPostParams(){
-        return null;
+    public String getBody() {
+        return isValid() ? body : null;
+    }
+
+    public List<NameValuePair> getBodyParams() {
+        return URLEncodedUtils.parse(getBody(), StandardCharsets.UTF_8);
+    }
+    public List<NameValuePair> getBodyParam(String name) {
+        final var searchList = new ArrayList<NameValuePair>();
+        getBodyParams().forEach(nameValuePair -> {
+            if (nameValuePair.getName().equals(name)) searchList.add(nameValuePair);
+        });
+        return searchList;
+    }
+
+    public List<NameValuePair> getPostParams() {
+        var postParams = getQueryParams();
+        postParams.addAll(getBodyParams());
+        return postParams;
+    }
+
+    public List<NameValuePair> getPostParam(String name) {
+        final var searchList = new ArrayList<NameValuePair>();
+        getPostParams().forEach(nameValuePair -> {
+            if (nameValuePair.getName().equals(name)) searchList.add(nameValuePair);
+        });
+        return searchList;
     }
 
     public boolean isValid() {
@@ -127,7 +146,7 @@ public class Request {
         return -1;
     }
 
-    private static Optional<String> extractHeader(List<String> headers, String header) {
+    public static Optional<String> extractHeader(List<String> headers, String header) {
         return headers.stream().filter(o -> o.startsWith(header)).map(o -> o.substring(o.indexOf(" "))).map(String::trim).findFirst();
     }
 

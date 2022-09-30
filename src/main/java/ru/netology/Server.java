@@ -13,12 +13,13 @@ import java.util.concurrent.Executors;
 import static ru.netology.Errors.*;
 
 public class Server {
+
     private final int nThreads = 64;
     private final ExecutorService handlersExecutorService = Executors.newFixedThreadPool(nThreads);
     private final List<String> validPaths = List.of("/index.html", "/spring.svg",
             "/spring.png", "/resources.html", "/styles.css", "/app.js", "/links.html",
             "/forms.html", "/classic.html", "/events.html", "/events.js", "/favicon.ico",
-            "/doneStyle.css",  "/done.html" );
+            "/done.html");
     private final Map<String, Map<String, Handler>> handlerMap = new HashMap<>();
 
 
@@ -59,7 +60,7 @@ public class Server {
     }
 
     private static void errorResponse(Errors error, BufferedOutputStream out) throws IOException {
-        out.write((error +"\r\n" +
+        out.write((error + "\r\n" +
                 "Content-Length: 0\r\n" +
                 "Connection: close\r\n" +
                 "\r\n"

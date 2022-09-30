@@ -28,7 +28,7 @@ public class MethodGETHandler {
             out.flush();
             return;
         }
-        // special case for forms.html
+        // special case for done.html
         if (request.getPath().equals("/done.html") &&
                 request.getQueryString().contains("login=") &&
                 request.getQueryString().contains("password=")) {
